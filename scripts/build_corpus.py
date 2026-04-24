@@ -50,15 +50,9 @@ def build_unified_knowledge_base(file_configs, output_jsonl_path):
                 
                 metadata = {
                     "source_file": input_path,
-                    "arxiv_id": "",
-                    "authors": "",
-                    "categories": "",
-                    "pub": "",
-                    "citations": 0,
-                    "journal_level": ""
                 }
                 for col in metadata_cols:
-                    if col in row and pd.notna(row[col]):
+                    if col in row:
                         metadata[col] = row[col]
                 
                 json_record = {
@@ -85,17 +79,17 @@ if __name__ == "__main__":
     # 在这里为每一个文件单独配置规则
     FILE_CONFIGS = [
         {
-            "input_path": "excel/achievement.xlsx",
-            "prefix": "achievement",
-            "title_col": "title",
-            "content_cols": ["analyse_contect"],
-        },
-        {
             "input_path": "excel/paper.csv",
             "prefix": "paper",
             "title_col": "title",
             "content_cols": ["abstract"],
             "metadata_cols": ["arxiv_id", "authors", "categories", "pub", "citations", "journal_level"]
+        },
+        {
+            "input_path": "excel/achievement.xlsx",
+            "prefix": "achievement",
+            "title_col": "title",
+            "content_cols": ["analyse_contect"],
         }
     ]
     
