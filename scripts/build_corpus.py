@@ -48,12 +48,12 @@ def build_unified_knowledge_base(file_configs, output_jsonl_path):
                         contents_parts.append(str(row[col]).strip())
                 contents = ", ".join(contents_parts)
                 
-                metadata = {
-                    "source_file": input_path,
-                }
-                for col in metadata_cols:
-                    if col in row:
-                        metadata[col] = row[col]
+                # metadata = {
+                #     "source_file": input_path,
+                # }
+                # for col in metadata_cols:
+                #     if col in row:
+                #         metadata[col] = row[col]
                 
                 json_record = {
                     "id": doc_id,
@@ -61,8 +61,8 @@ def build_unified_knowledge_base(file_configs, output_jsonl_path):
                     "contents": contents.strip(),
                 }
                 
-                if metadata:
-                    json_record["metadata"] = metadata
+                # if metadata:
+                #     json_record["metadata"] = metadata
 
                 json_line = json.dumps(json_record, ensure_ascii=False)
                 f.write(json_line + "\n")
@@ -83,13 +83,13 @@ if __name__ == "__main__":
             "prefix": "paper",
             "title_col": "title",
             "content_cols": ["abstract"],
-            "metadata_cols": ["arxiv_id", "authors", "categories", "pub", "citations", "journal_level"]
+            # "metadata_cols": ["arxiv_id", "authors", "categories", "pub", "citations", "journal_level"]
         },
         {
             "input_path": "excel/achievement.xlsx",
             "prefix": "achievement",
             "title_col": "title",
-            "content_cols": ["analyse_contect"],
+            "content_cols": ["analyse_contect"]
         }
     ]
     
