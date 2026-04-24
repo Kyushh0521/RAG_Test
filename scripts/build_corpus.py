@@ -50,9 +50,15 @@ def build_unified_knowledge_base(file_configs, output_jsonl_path):
                 
                 metadata = {
                     "source_file": input_path,
+                    "arxiv_id": "",
+                    "authors": "",
+                    "categories": "",
+                    "pub": "",
+                    "citations": 0,
+                    "journal_level": ""
                 }
                 for col in metadata_cols:
-                    if col in row:
+                    if col in row and pd.notna(row[col]):
                         metadata[col] = row[col]
                 
                 json_record = {
