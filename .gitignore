@@ -4,6 +4,8 @@
 # Project data
 excel/
 index/
+corpus/
+dataset/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
