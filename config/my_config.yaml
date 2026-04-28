@@ -1,6 +1,6 @@
 model2path:
-  bge_m3: "./bge-m3"
-  qwen_awq: "./Qwen-35B-AWQ"
+  bge_m3: "/mnt/share/wwt/retriever_model/bge-m3"
+  qwen_awq: "/mnt/share/wwt/Qwen3.5-35B-AWQ-4bit"
 model2pooling:
   bge_m3: "cls"
 
