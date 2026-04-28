@@ -1,26 +1,33 @@
+# ------------------------------------------------Global Paths------------------------------------------------#
 model2path:
   bge_m3: "/mnt/share/wwt/retriever_model/bge-m3"
   qwen_awq: "/mnt/share/wwt/Qwen3.5-35B-AWQ-4bit"
+
 model2pooling:
   bge_m3: "cls"
 
+# ------------------------------------------------Environment Settings------------------------------------------------#
 data_dir: "data/"
 save_dir: "output/"
 
 gpu_id: "0"
 dataset_name: "enterprise_prediction"
 split: [ "test" ]
+
 seed: 2024
 save_intermediate_data: True
 
+# -------------------------------------------------Retrieval Settings------------------------------------------------#
 retrieval_method: "bge_m3"
-index_path: "indexes/bge_m3_index/bge_m3_flat.index" 
-corpus_path: "data/corpus.jsonl" 
+index_path: "corpus/bge_m3_flat.index" 
+corpus_path: "corpus/corpus.jsonl" 
+
 retrieval_topk: 3
 retrieval_batch_size: 64
 retrieval_use_fp16: True
 retrieval_query_max_length: 512
 
+# -------------------------------------------------Generator Settings------------------------------------------------#
 framework: "vllm"
 generator_model: "qwen_awq"
 generator_max_input_len: 4096
@@ -34,5 +41,6 @@ vllm_kwargs:
   tensor_parallel_size: 1
   dtype: "half"
 
+# -------------------------------------------------Evaluation Settings------------------------------------------------#
 metrics: ['acc', 'em']
 save_metric_score: True
