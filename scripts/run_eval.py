@@ -59,7 +59,7 @@ def get_merged_config():
     parser.add_argument("--config_path", type=str, default="my_config.yaml", help="YAML 配置文件路径")
     
     # 动态覆盖参数
-    parser.add_argument("--dataset_name", type=str, choices=["enterprise_prediction"])
+    parser.add_argument("--dataset_name", type=str, choices=["prediction"])
     parser.add_argument("--test_sample_num", type=int, default=None, help="最大测试样本数量")
     parser.add_argument("--save_dir", type=str, default="output/")
     parser.add_argument("--gpu_id", type=str, default="0")

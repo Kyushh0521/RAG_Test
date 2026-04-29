@@ -65,6 +65,6 @@ def build_flashrag_test_dataset(input_json_path, output_jsonl_path, q_prefix="te
 
 if __name__ == "__main__":
     INPUT_JSON = "testv2.json"
-    OUTPUT_JSONL = "data/test.jsonl"
+    OUTPUT_JSONL = "dataset/prediction/testv2.jsonl"
 
     build_flashrag_test_dataset(INPUT_JSON, OUTPUT_JSONL)
