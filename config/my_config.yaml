@@ -7,7 +7,7 @@ model2pooling:
   bge_m3: "cls"
 
 # ------------------------------------------------Environment Settings------------------------------------------------#
-data_dir: "data/"
+data_dir: "dataset/"
 save_dir: "output/"
 
 gpu_id: "0"
