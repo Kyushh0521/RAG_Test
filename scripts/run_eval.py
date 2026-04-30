@@ -56,7 +56,7 @@ def get_merged_config():
     parser.add_argument("--method_name", type=str, default="Naive Gen",
                         choices=["Naive Gen", "Naive RAG"],
                         help="测试方法名称")
-    parser.add_argument("--config_path", type=str, default="my_config.yaml", help="YAML 配置文件路径")
+    parser.add_argument("--config_path", type=str, default="config/my_config.yaml", help="YAML 配置文件路径")
     
     # 动态覆盖参数
     parser.add_argument("--dataset_name", type=str, choices=["prediction"])
@@ -96,10 +96,12 @@ def main():
     # 1. 获取整合后的配置
     config = get_merged_config()
     method_name = config['method_name']
+
+    os.makedirs(config['save_dir'], exist_ok=True)
     
     # 2. 加载数据集
     dataset = get_dataset(config)
-    test_data = dataset.test
+    test_data = dataset["test"]
     
     print(f"\n🚀 正在初始化 【{method_name}】 流水线...")
     
@@ -133,8 +135,6 @@ def main():
     evaluator = Evaluator(config)
     eval_result = evaluator.evaluate(test_data)
     print(f"\n🎉 {method_name} 评测完成！结果: {eval_result}")
-    
-    test_data.save(config.save_dir)
 
 if __name__ == "__main__":
     main()

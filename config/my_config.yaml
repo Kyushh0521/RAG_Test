@@ -1,7 +1,7 @@
 # ------------------------------------------------Global Paths------------------------------------------------#
 model2path:
   bge_m3: "/mnt/share/wwt/retriever_model/bge-m3"
-  qwen_awq: "/mnt/share/wwt/Qwen3.5-35B-AWQ-4bit"
+  qwen2_5_7b_instruct: "/mnt/share/wwt/Qwen2.5-7B-Instruct"
 
 model2pooling:
   bge_m3: "cls"
@@ -29,17 +29,16 @@ retrieval_query_max_length: 512
 
 # -------------------------------------------------Generator Settings------------------------------------------------#
 framework: "vllm"
-generator_model: "qwen_awq"
+generator_model: "qwen2_5_7b_instruct"
 generator_max_input_len: 4096
 generation_params:
   do_sample: False
   max_tokens: 512
 
 vllm_kwargs:
-  quantization: "awq"
   gpu_memory_utilization: 0.65
   tensor_parallel_size: 1
-  dtype: "half"
+  dtype: "bfloat16"
 
 # -------------------------------------------------Evaluation Settings------------------------------------------------#
 metrics: ['acc', 'em']
