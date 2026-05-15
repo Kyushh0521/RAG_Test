@@ -91,7 +91,7 @@ def get_merged_config():
     dummy_dir = final_config["save_dir"]
     
     # 2. 计算出我们真正想要的、干净的三层路径
-    current_time = datetime.now().strftime("%Y_%m_%d_%H_%M")
+    current_time = datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
     clean_base_dir = os.path.dirname(dummy_dir)
     real_save_dir = os.path.join(
         clean_base_dir, 
@@ -157,7 +157,7 @@ def main():
 
         template = PromptTemplate(
             config=config,
-            system_prompt=(system_prompt),
+            system_prompt=(system_prompt_3),
             user_prompt="问题：{question}"
         )
         pipeline = SequentialPipeline(config, template)
