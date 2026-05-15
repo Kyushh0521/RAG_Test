@@ -1,6 +1,8 @@
 import argparse
+from datetime import datetime
 import os
 import json
+import shutil
 from flashrag.config import Config
 from flashrag.utils import get_dataset
 from flashrag.evaluator import Evaluator
@@ -79,15 +81,42 @@ def get_merged_config():
         if key != "config_path" and value is not None:
             config_dict[key] = value
 
-    # 设置保存路径逻辑
-    config_dict["save_note"] = args.method_name
+    # 设置诱饵 temp_layer
+    config_dict["save_note"] = "temp_layer"
     
-    # 初始化 FlashRAG Config (默认读取 base_config.yaml 并用 config_dict 覆盖)
-    # 如果你没有单独的 base_config.yaml，可以直接指向你的 my_config.yaml
+    # 1. 初始化 Config (此时 FlashRAG 已经偷偷建了临时文件夹并塞了 yaml 进去)
     final_config = Config(args.config_path, config_dict)
     
-    # 更新保存目录，使其包含模型名和方法名
-    final_config["save_dir"] = os.path.join(final_config["save_dir"], final_config["generator_model"], final_config["save_note"])
+    # 记录下这个包含 yaml 的临时“诱饵”目录
+    dummy_dir = final_config["save_dir"]
+    
+    # 2. 计算出我们真正想要的、干净的三层路径
+    current_time = datetime.now().strftime("%Y_%m_%d_%H_%M")
+    clean_base_dir = os.path.dirname(dummy_dir)
+    real_save_dir = os.path.join(
+        clean_base_dir, 
+        final_config["generator_model"], 
+        args.method_name, 
+        current_time
+    )
+
+    # 3. 强行接管 config 的后续保存路径
+    final_config["save_dir"] = real_save_dir
+
+    # 4. 手动创建我们真正的新目录
+    os.makedirs(real_save_dir, exist_ok=True)
+
+    # 5. 【核心修复】把 yaml 文件从临时目录“搬家”到正确目录
+    old_yaml_path = os.path.join(dummy_dir, "config.yaml")
+    new_yaml_path = os.path.join(real_save_dir, "config.yaml")
+    if os.path.exists(old_yaml_path):
+        shutil.move(old_yaml_path, new_yaml_path)
+
+    # 6. 打扫战场：删掉那个没用的临时文件夹
+    try:
+        os.rmdir(dummy_dir)
+    except OSError:
+        pass # 如果文件夹里还有其他意外生成的文件，就不强制删，以免误删数据
     
     return final_config
 
@@ -124,7 +153,7 @@ def main():
 
         template = PromptTemplate(
             config=config,
-            system_prompt=(system_prompt_1),
+            system_prompt=(system_prompt),
             user_prompt="问题：{question}"
         )
         pipeline = SequentialPipeline(config, template)
