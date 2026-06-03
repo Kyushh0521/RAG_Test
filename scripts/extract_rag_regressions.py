@@ -21,9 +21,9 @@ def is_correct(record):
 
 
 def main():
-    no_rag_path = Path(r"G:/Projects/RAG_Test/output/Naive Gen/intermediate_data.json")
-    rag_path = Path(r"G:/Projects/RAG_Test/output/Naive RAG/intermediate_data.json")
-    out_path = Path(r"G:/Projects/RAG_Test/output/failed_after_rag.json")
+    no_rag_path = Path(r"output/qwen2_5_7b_instruct/Naive Gen/2026_05_26_14_32_10/intermediate_data.json")
+    rag_path = Path(r"output/qwen2_5_7b_instruct/Naive RAG/2026_05_27_10_20_16/intermediate_data.json")
+    out_path = Path(r"output/qwen2_5_7b_instruct/merge_norag_rag.json")
 
     a = json.loads(no_rag_path.read_text(encoding="utf-8"))
     b = json.loads(rag_path.read_text(encoding="utf-8"))
@@ -32,16 +32,17 @@ def main():
     dict_b = {rec.get("id"): rec for rec in b if rec.get("id")}
 
     results = []
-    for id_, rec_a in dict_a.items():
+    all_ids = sorted(set(dict_a) | set(dict_b))
+    for id_ in all_ids:
+        rec_a = dict_a.get(id_)
         rec_b = dict_b.get(id_)
-        if not rec_b:
-            continue
-        if is_correct(rec_a) and not is_correct(rec_b):
-            results.append({
-                "id": id_,
-                "no_rag": rec_a,
-                "rag": rec_b,
-            })
+        results.append({
+            "id": id_,
+            "no_rag": rec_a,
+            "rag": rec_b,
+            "no_rag_correct": is_correct(rec_a) if rec_a else False,
+            "rag_correct": is_correct(rec_b) if rec_b else False,
+        })
 
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(json.dumps(results, ensure_ascii=False, indent=2), encoding="utf-8")

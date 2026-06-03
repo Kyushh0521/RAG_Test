@@ -91,7 +91,7 @@ def get_merged_config():
     dummy_dir = final_config["save_dir"]
     
     # 2. 计算出我们真正想要的、干净的三层路径
-    current_time = datetime.now().strftime("%Y_%m_%d_%H_%M")
+    current_time = datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
     clean_base_dir = os.path.dirname(dummy_dir)
     real_save_dir = os.path.join(
         clean_base_dir, 
@@ -145,7 +145,7 @@ def main():
         pipeline.naive_run(test_data, pred_process_fun=enterprise_pred_parse)
         
     elif method_name == "Naive RAG":
-        system_prompt = "你是一位资深的企业创新战略预测专家。请你根据所给文档回答问题，从四个候选选项（A/B/C/D）中，选择最佳答案选项。解释你的答案，并必须在回复末尾以 “答案为：X。” 的格式给出最终答案选项，例如：“答案为：A。”。末尾严禁附加任何其他字符。\n以下是提供的文档：\n{reference}"
+        system_prompt_0 = "你是一位资深的企业创新战略预测专家。请你根据所给文档回答问题，从四个候选选项（A/B/C/D）中，选择最佳答案选项。解释你的答案，并必须在回复末尾以 “答案为：X。” 的格式给出最终答案选项，例如：“答案为：A。”。末尾严禁附加任何其他字符。\n以下是提供的文档：\n{reference}"
 
         system_prompt_1 = "你是一位资深的企业创新战略预测专家。请你根据所给文档（可能混杂了无关的噪声或浅层干扰信息）回答问题，从四个候选选项（A/B/C/D）中，选择最佳答案选项。请你辩证地参考这些文档，切勿盲从。注意：1. 甄别并剔除文档中与企业研究领域和主营业务不符的无效信息。2. 以题干中企业现有的信息为第一性原理，结合提供的文档，进行前瞻性的技术演进推演。3. 警惕那些仅仅是“字面关键词拼接”或“缺乏技术支撑的宏观概念”的干扰选项。解释你的答案，并必须在回复末尾以 “答案为：X。” 的格式给出最终答案选项，例如：“答案为：A。”。末尾严禁附加任何其他字符。\n以下是提供的文档：\n{reference}"
 
@@ -157,7 +157,7 @@ def main():
 
         template = PromptTemplate(
             config=config,
-            system_prompt=(system_prompt),
+            system_prompt=(system_prompt_4),
             user_prompt="问题：{question}"
         )
         pipeline = SequentialPipeline(config, template)
