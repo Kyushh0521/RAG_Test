@@ -5,6 +5,7 @@ import shutil
 import argparse
 import warnings
 import torch.distributed as dist
+from datetime import datetime
 from prompt_toolkit import PromptSession
 
 warnings.filterwarnings("ignore")
@@ -27,9 +28,10 @@ def main():
     print("=" * 60)
     
     # 1. 基础配置
+    base_save_dir = "output/interactive"
     config_dict = {
         "dataset_name": "interactive_run", 
-        "save_dir": "output/interactive",
+        "save_dir": base_save_dir,
         "save_note": "interactive",
         "metrics": [],
         "save_metric_score": False
@@ -39,6 +41,20 @@ def main():
         print(f"⚠️ 警告: 未找到配置文件 {args.config_path}，将采用框架默认配置。")
         
     config = Config(args.config_path, config_dict)
+    
+    current_time = datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
+    generator_model = config.get("generator_model").split('/')[-1]
+    real_save_dir = os.path.join(base_save_dir, generator_model, current_time)
+    
+    config["save_dir"] = real_save_dir
+    os.makedirs(real_save_dir, exist_ok=True)
+    
+    # 定义交互式对话中间结果的保存文件路径
+    history_records_file = os.path.join(real_save_dir, "interactive_history.json")
+    print(f"📂 本次对话的中间结果将实时保存至: {history_records_file}")
+
+    # 用于在内存中缓存当前 Session 的所有对话数据
+    all_records = []
     
     # 2. 准备 Prompt 模板
     system_prompt = (
@@ -78,13 +94,14 @@ def main():
             print("\n🔎 正在检索文档并生成回答...")
             
             # 使用临时文件创建一个仅包含当前问题的测试数据集
-            temp_dir = f"dataset/interactive_temp_{uuid.uuid4().hex[:8]}"
+            item_id = f"interactive_{uuid.uuid4().hex[:8]}"
+            temp_dir = f"dataset/interactive_temp_{item_id}"
             os.makedirs(temp_dir, exist_ok=True)
             temp_test_file = os.path.join(temp_dir, "test.jsonl")
             
             with open(temp_test_file, 'w', encoding='utf-8') as f:
                 # 构造符合 flashrag 标准格式的一条数据
-                dummy_item = {"id": "interactive_1", "question": user_input}
+                dummy_item = {"id": item_id, "question": user_input}
                 f.write(json.dumps(dummy_item, ensure_ascii=False) + "\n")
             
             try:
@@ -108,11 +125,28 @@ def main():
                     answer = getattr(first_item, 'pred', None) 
                     
                     if answer:
-                        print("\n🤖 [RAG 回复]:")
+                        print("\n🤖 [LLM 回复]:")
                         print(answer.strip())
                         print()
                     else:
                         print("\n🤖 [系统提示]: 生成结果为空。\n")
+                    
+                    # FlashRAG 会将检索到的文档列表存储在 item.retrieval_result 中
+                    retrieved_docs = getattr(first_item, 'retrieval_result', [])
+                    
+                    # 构造您需要的精简保存结构
+                    save_item = {
+                        "id": item_id,
+                        "question": user_input,
+                        "docs": retrieved_docs,
+                        "output": answer.strip() if answer else ""
+                    }
+                    
+                    # 追加到内存列表中，并覆盖写入 JSON 数组文件
+                    all_records.append(save_item)
+                    with open(history_records_file, 'w', encoding='utf-8') as f_out:
+                        json.dump(all_records, f_out, ensure_ascii=False)
+                    # =======================================================
                 else:
                     print("\n🤖 [系统提示]: 未生成有效回复 (数据集返回空)。\n")
                     
