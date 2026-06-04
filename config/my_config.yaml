@@ -41,5 +41,5 @@ vllm_kwargs:
   dtype: "bfloat16"
 
 # -------------------------------------------------Evaluation Settings------------------------------------------------#
-metrics: ['acc', 'em']
+metrics: ['em']
 save_metric_score: True

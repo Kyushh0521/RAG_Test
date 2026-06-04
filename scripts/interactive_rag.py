@@ -4,8 +4,9 @@ import uuid
 import shutil
 import argparse
 import warnings
+import torch.distributed as dist
+from prompt_toolkit import PromptSession
 
-# 忽略潜在的警告信息，保持终端输出清爽
 warnings.filterwarnings("ignore")
 
 from flashrag.config import Config
@@ -26,12 +27,12 @@ def main():
     print("=" * 60)
     
     # 1. 基础配置
-    # 强制覆盖某些默认配置，使其适用于单次查询而不保存大量中间文件
     config_dict = {
         "dataset_name": "interactive_run", 
         "save_dir": "output/interactive",
-        "save_intermediate_data": False,
-        "save_note": "interactive"
+        "save_note": "interactive",
+        "metrics": [],
+        "save_metric_score": False
     }
     
     if not os.path.exists(args.config_path):
@@ -40,7 +41,6 @@ def main():
     config = Config(args.config_path, config_dict)
     
     # 2. 准备 Prompt 模板
-    # 使用通用且较为泛用的 RAG 模板（可参考您的 run_eval.py 自行修改）
     system_prompt = (
         "你是一个专业的问答助手。请你根据所给提示和参考文档回答用户的问题。\n"
         "回答需准确、简洁。如果参考文档中没有相关信息，请尝试基于自身知识回答，或说明文档中未找到相关答案。\n"
@@ -62,11 +62,12 @@ def main():
         print(f"❌ Pipeline 初始化失败: {e}")
         return
     
+    session = PromptSession()
     # 4. 进入交互式对话循环
     while True:
         try:
             print("-" * 60)
-            user_input = input("👤 请输入您的问题 (输入 'quit' 或 'exit' 退出):\n> ").strip()
+            user_input = session.prompt("👤 请输入您的问题 (输入 'quit' 或 'exit' 退出):\n> ", multiline=False).strip()
             
             if user_input.lower() in ['quit', 'exit']:
                 break
@@ -77,7 +78,6 @@ def main():
             print("\n🔎 正在检索文档并生成回答...")
             
             # 使用临时文件创建一个仅包含当前问题的测试数据集
-            # 这种方式最兼容 FlashRAG Dataset 的加载逻辑
             temp_dir = f"dataset/interactive_temp_{uuid.uuid4().hex[:8]}"
             os.makedirs(temp_dir, exist_ok=True)
             temp_test_file = os.path.join(temp_dir, "test.jsonl")
@@ -107,17 +107,10 @@ def main():
                     # 获取生成的文本
                     answer = getattr(first_item, 'pred', None) 
                     
-                    # 获取检索到的文档 (可选项，如果需要让用户看到供他参考的片段)
-                    # retrieved_docs = getattr(first_item, 'docs', [])
-                    
                     if answer:
                         print("\n🤖 [RAG 回复]:")
                         print(answer.strip())
                         print()
-                        
-                        # (可选) 在交互界面打印被检索到的资料
-                        # if retrieved_docs:
-                        #     print(f"📚 [检索了 {len(retrieved_docs)} 篇相关片段]")
                     else:
                         print("\n🤖 [系统提示]: 生成结果为空。\n")
                 else:
@@ -131,13 +124,15 @@ def main():
                     shutil.rmtree(temp_dir, ignore_errors=True)
                     
         except KeyboardInterrupt:
-            # 捕捉按键终端信号 (Ctrl+C)
-            print("\n\n👋 感应到打断信号，退出系统。")
-            break
+            print("\n\n👋 感应到打断信号，但不会退出。若要退出请输入 'quit' 或 'exit'。\n")
+            continue
         except Exception as e:
             print(f"\n❌ [全局严重错误]: {str(e)}")
 
     print("👋 感谢使用交互式 RAG 系统，再见！")
+
+    if dist.is_initialized():
+        dist.destroy_process_group()
 
 if __name__ == "__main__":
     main()
