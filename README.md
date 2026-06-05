@@ -28,9 +28,14 @@
 
 ### 1. 安装依赖
 
-确保你系统环境中已安装 Python (推荐 3.12)。在项目根目录下，执行以下命令安装相关的 Python 依赖包：
+确保你系统环境中已安装 Python (推荐 3.12)。在项目根目录下，按以下顺序执行命令安装相关的依赖包：
 
 ```bash
+# 1. 安装 FAISS（通过 conda-forge）
+conda install conda-forge::faiss
+# 2. 安装 PyTorch（CUDA 12.1）
+pip install torch==2.5.1 torchvision==0.20.1 torchaudio==2.5.1 --index-url https://download.pytorch.org/whl/cu121
+# 3. 安装其他依赖
 pip install -r requirements.txt
 ```
 

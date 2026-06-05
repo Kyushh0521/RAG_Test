@@ -30,7 +30,8 @@ def main():
     # 1. 基础配置
     base_save_dir = "output/interactive"
     config_dict = {
-        "dataset_name": "interactive_run", 
+        "dataset_name": "interactive_run",
+        "save_intermediate_data": False,
         "save_dir": base_save_dir,
         "save_note": "interactive",
         "metrics": [],
@@ -43,7 +44,7 @@ def main():
     config = Config(args.config_path, config_dict)
     
     current_time = datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
-    generator_model = config.get("generator_model").split('/')[-1]
+    generator_model = config["generator_model"].split('/')[-1]
     real_save_dir = os.path.join(base_save_dir, generator_model, current_time)
     
     config["save_dir"] = real_save_dir
@@ -58,9 +59,12 @@ def main():
     
     # 2. 准备 Prompt 模板
     system_prompt = (
-        "你是一个专业的问答助手。请你根据所给提示和参考文档回答用户的问题。\n"
-        "回答需准确、简洁。如果参考文档中没有相关信息，请尝试基于自身知识回答，或说明文档中未找到相关答案。\n"
-        "以下是提供的文档：\n{reference}"
+        "你是一个极其智能且专业的企业创新方向预测专家。请你在回答时严格遵循以下两阶段核心原则：\n\n"
+        "1. 【闲聊与身份识别阶段】：\n"
+        "   - 如果用户输入的是日常打招呼（如‘你好’、‘嗨’）、情感寒暄（如‘谢谢’、‘再见’）、或者是询问你的身份与能力（如‘你是谁’、‘你能做什么’、‘你叫什么名字’），你必须【完全忽略】下方提供的参考文档，直接以一个友善、专业、独立的AI助手身份流畅地回答用户，不要提及任何文档中没有找到答案之类的话。\n\n"
+        "2. 【知识检索问答阶段】：\n"
+        "   - 如果用户询问的是具体的专业知识、技术、论文或事实性问题，请你根据所给提示，结合参考文档和自身知识回答。回答需准确、简洁。如果参考文档中确实没有相关信息，请尝试基于自身知识回答，或说明‘在参考文档中未找到直接答案，但基于已知知识...’。\n\n"
+        "以下是供你参考的文档（如果是日常闲聊，请直接无视它们）：\n{reference}"
     )
     
     template = PromptTemplate(
@@ -86,6 +90,27 @@ def main():
             user_input = session.prompt("👤 请输入您的问题 (输入 'quit' 或 'exit' 退出):\n> ", multiline=False).strip()
             
             if user_input.lower() in ['quit', 'exit']:
+                print("\n🧹 正在清理和整理系统日志与配置文件...")
+                try:
+                    # 1. 遍历寻找框架自动生成的默认文件夹
+                    if os.path.exists(base_save_dir):
+                        for item in os.listdir(base_save_dir):
+                            item_path = os.path.join(base_save_dir, item)
+                            
+                            # 匹配 FlashRAG 默认生成的文件夹命名规则
+                            if os.path.isdir(item_path) and item.startswith("interactive_run_"):
+                                default_config_path = os.path.join(item_path, "config.yaml")
+                                
+                                # 如果找到了默认的 config.yaml，将其拷贝到你指定的 real_save_dir 中
+                                if os.path.exists(default_config_path):
+                                    target_config_path = os.path.join(real_save_dir, "config.yaml")
+                                    shutil.copy(default_config_path, target_config_path)
+                                    print(f"✅ 已成功将配置文件迁移至: {target_config_path}")
+                                
+                                # 彻底删除框架默认生成的整个无用文件夹
+                                shutil.rmtree(item_path, ignore_errors=True)
+                except Exception as clean_err:
+                    print(f"⚠️ 整理残留文件时发生轻微错误（不影响使用）: {clean_err}")
                 break
             
             if not user_input:
@@ -145,7 +170,7 @@ def main():
                     # 追加到内存列表中，并覆盖写入 JSON 数组文件
                     all_records.append(save_item)
                     with open(history_records_file, 'w', encoding='utf-8') as f_out:
-                        json.dump(all_records, f_out, ensure_ascii=False)
+                        json.dump(all_records, f_out, ensure_ascii=False, indent=4)
                     # =======================================================
                 else:
                     print("\n🤖 [系统提示]: 未生成有效回复 (数据集返回空)。\n")
